@@ -15,7 +15,9 @@ val localProperties = Properties().apply {
 }
 
 fun localProp(key: String, default: String = "") : String =
-    localProperties.getProperty(key) ?: System.getenv(key) ?: default
+    (localProperties.getProperty(key) ?: System.getenv(key) ?: default)
+        .trim()
+        .trim('"')
 
 kotlin {
     jvmToolchain(21)
