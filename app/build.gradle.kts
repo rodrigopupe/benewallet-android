@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.sentry)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -47,6 +48,11 @@ sentry {
     autoInstallation {
         enabled = false
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
 }
 
 dependencies {
