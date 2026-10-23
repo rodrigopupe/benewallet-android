@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.hilt.android.gradle.plugin)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.sentry)
 }
 
 android {
@@ -38,6 +39,16 @@ android {
     }
 }
 
+sentry {
+    // Eve with no Sentry token, build will not failure and no files will be uploaded
+    autoUploadProguardMapping = false
+    includeSourceContext = false
+    // Keep SDK version control under catalog
+    autoInstallation {
+        enabled = false
+    }
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -49,6 +60,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
+    implementation(libs.sentry.android)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
