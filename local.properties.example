@@ -1,0 +1,8 @@
+# Copie este arquivo para local.properties e ajuste conforme necessário.
+# Todas as chaves são opcionais.
+
+# URL base do BFF (com "/" no final)
+BFF_BASE_URL=http://localhost:8080/
+
+# DSN do Sentry. Deixe vazio para desativar o envio de erros.
+SENTRY_DSN=
