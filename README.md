@@ -41,7 +41,7 @@ flowchart LR
 O app é um módulo único organizado em pacotes "module-like", com dependências em um só sentido:
 
 ```
-app            # Application, navegação raiz, wiring do Hilt
+app            # Application, navegação raiz, wiring do Koin
 core           # design system, rede, analytics, crash, flags, utilitários
 feature
  ├── auth      # login simulado e biometria
@@ -56,10 +56,11 @@ feature
 | [0002](docs/adr/0002-offline-first-com-room.md) | Offline-first com Room |
 | [0003](docs/adr/0003-feature-flags-via-bff.md) | Feature flags fornecidas pelo BFF |
 | [0004](docs/adr/0004-pacotes-module-like.md) | Pacotes "module-like" em vez de módulos Gradle |
+| [0005](docs/adr/0005-koin-para-injecao-de-dependencias.md) | Koin para injeção de dependências |
 
 ## Stack
 
-Kotlin, Jetpack Compose, Navigation Compose, Hilt, Room, DataStore, Retrofit/OkHttp, kotlinx.serialization, Coroutines/Flow, Sentry, Ktor (BFF).
+Kotlin, Jetpack Compose, Navigation Compose, Koin, Room, DataStore, Retrofit/OkHttp, kotlinx.serialization, Coroutines/Flow, Sentry, Ktor (BFF).
 
 ## Como rodar
 

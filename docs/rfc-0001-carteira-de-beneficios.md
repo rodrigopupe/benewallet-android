@@ -59,7 +59,7 @@ flowchart LR
 - **Dados:** repositório *offline-first*: o Room é a fonte da verdade da UI e a rede atualiza o cache. Ver ADR-0002.
 - **Preferências e metas:** DataStore.
 - **Estrutura:** módulo único `:app` organizado em pacotes "module-like" (`core`, `feature.auth`, `feature.wallet`), com dependências em um só sentido. Ver ADR-0004.
-- **Injeção de dependências:** Hilt.
+- **Injeção de dependências:** Koin. Ver ADR-0005.
 - **Assíncrono:** Coroutines e Flow.
 
 ### 4.3 BFF (Ktor)
@@ -79,7 +79,7 @@ Camada fina que agrega e adapta os dados para o app.
 
 ### 4.5 Observabilidade
 - Crashes e erros via **Sentry**, atrás da interface `CrashReporter`.
-- Eventos de produto via interface `Analytics`, com implementação inicial em Logcat. A troca por outro provedor (ex.: Firebase Analytics) é feita apenas no módulo de injeção do Hilt.
+- Eventos de produto via interface `Analytics`, com implementação inicial em Logcat. A troca por outro provedor (ex.: Firebase Analytics) é feita apenas no módulo de injeção do Koin.
 - Eventos nomeados conforme a seção 3.
 
 ### 4.6 Rollout
