@@ -6,10 +6,7 @@ import com.rpstudio.benewallet.BuildConfig
 import io.sentry.Sentry
 import io.sentry.android.core.SentryAndroid
 
-internal class SentryCrashReporter(
-    private val context: Context,
-    private val dsn: String,
-) : CrashReporter {
+internal class SentryCrashReporter(private val context: Context, private val dsn: String) : CrashReporter {
     override fun initialize() {
         if (!dsn.startsWith("https://")) return
 

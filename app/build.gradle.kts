@@ -14,7 +14,7 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-fun localProp(key: String, default: String = "") : String =
+fun localProp(key: String, default: String = ""): String =
     (localProperties.getProperty(key) ?: System.getenv(key) ?: default)
         .trim()
         .trim('"')
