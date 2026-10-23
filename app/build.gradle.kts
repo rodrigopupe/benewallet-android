@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,6 +8,18 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.sentry)
     alias(libs.plugins.detekt)
+}
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun localProp(key: String, default: String = "") : String =
+    localProperties.getProperty(key) ?: System.getenv(key) ?: default
+
+kotlin {
+    jvmToolchain(21)
 }
 
 android {
@@ -22,6 +36,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BFF_BASE_URL", "\"${localProp("BFF_BASE_URL", "http://localhost:8080/")}\"")
+        buildConfigField("String", "SENTRY_DSN", "\"${localProp("SENTRY_DSN")}\"")
     }
 
     buildTypes {
@@ -37,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
