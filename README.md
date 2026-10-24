@@ -107,7 +107,7 @@ No emulador, também funciona o endereço `http://10.0.2.2:8080/`.
 
 - Formatação: Spotless + ktlint (`./gradlew spotlessCheck`)
 - Análise estática: Detekt (`./gradlew detekt`)
-- Testes unitários: `./gradlew testDebugUnitTest`
+- Testes unitários: `./gradlew testDebugUnitTest :bff:test` (Cobrem os módulos `:app` e `:bff`)
 - Pipeline no GitHub Actions: formatação, análise estática, testes e build do APK debug (artefato)
 
 ## Segurança e LGPD
