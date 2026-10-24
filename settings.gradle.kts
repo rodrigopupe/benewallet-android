@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "BeneWallet"
 include(":app")
+include(":bff")
