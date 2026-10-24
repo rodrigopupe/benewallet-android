@@ -3,6 +3,7 @@ package com.rpstudio.benewallet.bff
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.random.Random
 
 internal data class Transaction(
@@ -32,6 +33,8 @@ private data class Spec(
     val hours: IntRange,
     val merchants: List<String>
 )
+
+private data class Spend(val spec: Spec, val amountCents: Long, val at: Instant, val merchant: String)
 
 private const val DEFAULT_SEED = 42L
 private const val HISTORY_DAYS = 90
@@ -93,6 +96,16 @@ private val SPECS = listOf(
 
 private val NEWEST_FIRST = compareByDescending<Transaction> { it.occurredAt }.thenByDescending { it.id }
 
+/** Draws one candidate purchase for [spec] on [day], or null if there is none that day. */
+private fun Random.drawSpend(spec: Spec, day: LocalDate, zone: ZoneId): Spend? {
+    if (nextDouble() >= spec.chancePerDay) return null
+    val amount = nextLong(spec.amountCents.first, spec.amountCents.last + 1)
+    val hour = nextInt(spec.hours.first, spec.hours.last + 1)
+    val at = day.atTime(hour, nextInt(MINUTES_PER_HOUR)).atZone(zone).toInstant()
+    val merchant = spec.merchants[nextInt(spec.merchants.size)]
+    return Spend(spec, amount, at, merchant)
+}
+
 /**
  * Deterministic mock data: fixed seed, dates relative to the injected [clock].
  * The same day always yields the same data, and "this month" is never empty.
@@ -134,25 +147,39 @@ internal data class MockWalletData(private val clock: Clock, val seed: Long = DE
             if (offset == HISTORY_DAYS || day.dayOfMonth == 1) {
                 val at = day.atTime(RECHARGE_HOUR, 0).atZone(zone).toInstant()
                 if (!at.isAfter(now)) {
-                    for ((benefit, amount) in MONTHLY_RECHARGE_CENTS) {
+                    MONTHLY_RECHARGE_CENTS.forEach { (benefit, amount) ->
                         balances[benefit] = balances.getValue(benefit) + amount
-                        result += Transaction(nextId++, benefit, Category.RECHARGE, "Recarga mensal", amount, at)
+                        result.add(
+                            Transaction(
+                                id = nextId++,
+                                benefit = benefit,
+                                category = Category.RECHARGE,
+                                merchant = "Recarga mensal",
+                                amountCents = amount,
+                                occurredAt = at
+                            )
+                        )
                     }
                 }
             }
 
-            for (spec in SPECS) {
-                if (random.nextDouble() >= spec.chancePerDay) continue
-                val amount = random.nextLong(spec.amountCents.first, spec.amountCents.last + 1)
-                val hour = random.nextInt(spec.hours.first, spec.hours.last + 1)
-                val at = day.atTime(hour, random.nextInt(MINUTES_PER_HOUR)).atZone(zone).toInstant()
-                val merchant = spec.merchants[random.nextInt(spec.merchants.size)]
-
-                val affordable = balances.getValue(spec.benefit) >= amount
-                if (at.isAfter(now) || !affordable) continue
-
-                balances[spec.benefit] = balances.getValue(spec.benefit) - amount
-                result += Transaction(nextId++, spec.benefit, spec.category, merchant, -amount, at)
+            val spends = SPECS.mapNotNull { random.drawSpend(it, day, zone) }
+            spends.forEach { spend ->
+                val benefit = spend.spec.benefit
+                val affordable = balances.getValue(benefit) >= spend.amountCents
+                if (affordable && spend.at.isAfter(now).not()) {
+                    balances[benefit] = balances.getValue(benefit) - spend.amountCents
+                    result.add(
+                        Transaction(
+                            id = nextId++,
+                            benefit = benefit,
+                            category = spend.spec.category,
+                            merchant = spend.merchant,
+                            amountCents = -spend.amountCents,
+                            occurredAt = spend.at
+                        )
+                    )
+                }
             }
         }
 
