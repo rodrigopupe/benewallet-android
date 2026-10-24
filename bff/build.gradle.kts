@@ -2,6 +2,7 @@ plugins {
     id("java-library")
     alias(libs.plugins.jetbrains.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.detekt)
     alias(libs.plugins.ktor)
     application
 }
@@ -19,6 +20,11 @@ kotlin {
 
 application {
     mainClass.set("com.rpstudio.benewallet.bff.ApplicationKt")
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
 }
 
 dependencies {
