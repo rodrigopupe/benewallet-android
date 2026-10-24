@@ -33,7 +33,7 @@ jobs:
         run: ./gradlew spotlessCheck detekt
 
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testDebugUnitTest :bff:test
 
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug
