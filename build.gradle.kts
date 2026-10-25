@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.spotless)
     alias(libs.plugins.jetbrains.kotlin.jvm) apply false
     alias(libs.plugins.ktor) apply false
+    alias(libs.plugins.androidx.room) apply false
 }
 
 spotless {
