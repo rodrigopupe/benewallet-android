@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ac7ffea8ac238ff2214b65f45ff77304",
+    "identityHash": "e46345c7ad39e2a42b8341a36ab9dea7",
     "entities": [
       {
         "tableName": "transactions",
@@ -124,7 +124,7 @@
       },
       {
         "tableName": "transactions_sync",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `fetchedAtMillis` INTEGER NOT NULL, `nextCursor` TEXT, `endReached` INTEGER NOT NULL, `category` TEXT, `fromDate` TEXT, `toDate` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `fetchedAtMillis` INTEGER NOT NULL, `nextCursor` TEXT, `category` TEXT, `fromDate` TEXT, `toDate` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -142,12 +142,6 @@
             "fieldPath": "nextCursor",
             "columnName": "nextCursor",
             "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "endReached",
-            "columnName": "endReached",
-            "affinity": "INTEGER",
-            "notNull": true
           },
           {
             "fieldPath": "category",
@@ -175,7 +169,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ac7ffea8ac238ff2214b65f45ff77304')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e46345c7ad39e2a42b8341a36ab9dea7')"
     ]
   }
 }

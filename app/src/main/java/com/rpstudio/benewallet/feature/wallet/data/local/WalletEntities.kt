@@ -33,7 +33,6 @@ internal data class TransactionsSyncEntity(
     @PrimaryKey val id: Int = SYNC_SINGLETON_ID,
     val fetchedAtMillis: Long,
     val nextCursor: String?,
-    val endReached: Boolean,
     val category: String?,
     val fromDate: String?,
     val toDate: String?
