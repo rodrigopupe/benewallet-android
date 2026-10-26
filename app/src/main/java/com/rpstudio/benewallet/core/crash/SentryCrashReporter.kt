@@ -14,6 +14,9 @@ internal class SentryCrashReporter(private val context: Context, private val dsn
             SentryAndroid.init(context) { options ->
                 options.dsn = dsn
                 options.environment = if (BuildConfig.DEBUG) DEBUG_ENVIRONMENT else RELEASE_ENVIRONMENT
+                // Already the SDK default; explicit because no IP or user data may leave the device (LGPD)
+                options.isSendDefaultPii = false
+                options.setBeforeSend { event, _ -> event.scrubbed() }
             }
         }.onFailure { error ->
             Log.w("CrashReporter", "Sentry initialization failed", error)
