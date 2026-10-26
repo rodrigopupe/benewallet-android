@@ -27,4 +27,7 @@ internal interface WalletLocalDataSource {
 
     /** Atomically appends an older page and moves the cursor. Does not touch the fetch time of the head. */
     suspend fun appendTransactions(page: TransactionPage)
+
+    /** Wipes everything cached, including the sync markers: the next account must not see the previous one's data. */
+    suspend fun clearAll()
 }

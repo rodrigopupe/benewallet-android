@@ -61,4 +61,13 @@ internal class RoomWalletLocalDataSource(private val database: WalletDatabase) :
             syncDao.updateTransactionsCursor(page.nextCursor)
         }
     }
+
+    override suspend fun clearAll() {
+        database.withTransaction {
+            transactionDao.deleteAll()
+            balanceDao.deleteAll()
+            syncDao.deleteBalanceSync()
+            syncDao.deleteTransactionsSync()
+        }
+    }
 }

@@ -5,11 +5,13 @@ import java.io.IOException
 import java.time.Clock
 import java.time.Duration
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 
 private val RENEW_MARGIN: Duration = Duration.ofSeconds(30)
@@ -61,8 +63,9 @@ internal class DefaultSessionManager(
     }
 
     override suspend fun logout() {
-        val refreshToken = mutex.withLock {
-            tokens?.refreshToken.also { end() }
+        // Signing out must finish even if the screen that asked for it is gone: half a sign-out leaves data behind
+        val refreshToken = withContext(NonCancellable) {
+            mutex.withLock { tokens?.refreshToken.also { end() } }
         }
         // The device is already signed out; the server call only revokes the refresh token earlier than its expiry
         if (refreshToken != null) revokeOnServer(refreshToken)

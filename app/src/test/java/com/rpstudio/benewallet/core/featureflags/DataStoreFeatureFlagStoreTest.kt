@@ -41,6 +41,15 @@ class DataStoreFeatureFlagStoreTest {
     }
 
     @Test
+    fun `replacing with nothing clears every flag`() = runTest {
+        store.replaceFlags(mapOf("goals" to true, "statement_filters" to false))
+
+        store.replaceFlags(emptyMap())
+
+        assertEquals(emptyMap<String, Boolean>(), store.observeFlags().first())
+    }
+
+    @Test
     fun `other preferences in the file are not mistaken for flags`() = runTest {
         dataStore.edit { it[stringPreferencesKey("something_else")] = "x" }
 

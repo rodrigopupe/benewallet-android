@@ -83,6 +83,13 @@ internal class FakeWalletLocalDataSource : WalletLocalDataSource {
         sync.value = sync.value?.copy(nextCursor = page.nextCursor)
     }
 
+    override suspend fun clearAll() {
+        balances.value = emptyList()
+        balancesFetchedAt.value = null
+        transactions.value = emptyList()
+        sync.value = null
+    }
+
     private fun StatementFilter.matches(transaction: Transaction): Boolean {
         val day = transaction.occurredAt.atZone(statementZone).toLocalDate()
         return (category == null || transaction.category == category) &&

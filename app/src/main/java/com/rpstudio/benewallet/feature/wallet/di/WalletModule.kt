@@ -1,7 +1,9 @@
 package com.rpstudio.benewallet.feature.wallet.di
 
 import androidx.room.Room
+import com.rpstudio.benewallet.core.auth.SessionDataCleaner
 import com.rpstudio.benewallet.core.common.DispatcherNames
+import com.rpstudio.benewallet.feature.wallet.data.WalletSessionCleaner
 import com.rpstudio.benewallet.feature.wallet.data.local.RoomWalletLocalDataSource
 import com.rpstudio.benewallet.feature.wallet.data.local.WALLET_DATABASE_NAME
 import com.rpstudio.benewallet.feature.wallet.data.local.WalletDatabase
@@ -17,6 +19,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import retrofit2.Retrofit
 
@@ -31,6 +34,9 @@ val walletModule: Module = module {
     }
 
     single<WalletLocalDataSource> { RoomWalletLocalDataSource(get()) }
+
+    // Bound by its own type so it does not replace the cleaners of other features: the session manager runs them all
+    single { WalletSessionCleaner(get()) } bind SessionDataCleaner::class
 
     single<WalletRepository> {
         DefaultWalletRepository(

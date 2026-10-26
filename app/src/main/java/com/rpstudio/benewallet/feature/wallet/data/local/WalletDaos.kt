@@ -51,4 +51,10 @@ internal interface SyncDao {
 
     @Query("UPDATE transactions_sync SET nextCursor = :cursor WHERE id = $SYNC_SINGLETON_ID")
     suspend fun updateTransactionsCursor(cursor: String?)
+
+    @Query("DELETE FROM balance_sync")
+    suspend fun deleteBalanceSync()
+
+    @Query("DELETE FROM transactions_sync")
+    suspend fun deleteTransactionsSync()
 }

@@ -4,11 +4,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.rpstudio.benewallet.core.auth.SessionDataCleaner
 import com.rpstudio.benewallet.core.common.DispatcherNames
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import retrofit2.Retrofit
 
@@ -23,6 +25,8 @@ val featureFlagsModule: Module = module {
     }
 
     single<FeatureFlagStore> { DataStoreFeatureFlagStore(get(named(FEATURE_FLAGS_FILE_NAME))) }
+
+    single { FeatureFlagsSessionCleaner(get()) } bind SessionDataCleaner::class
 
     single<FeatureFlagsRepository> {
         DefaultFeatureFlagsRepository(

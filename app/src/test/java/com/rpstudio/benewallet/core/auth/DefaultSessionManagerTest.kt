@@ -5,7 +5,10 @@ import com.rpstudio.benewallet.feature.wallet.data.MutableClock
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -21,8 +24,13 @@ class DefaultSessionManagerTest {
     private val store = FakeTokenStore()
     private val crashReporter = FakeCrashReporter()
     private var cleaned = 0
-    private val manager =
-        DefaultSessionManager(store, service, listOf(SessionDataCleaner { cleaned++ }), crashReporter, clock)
+    private val manager = DefaultSessionManager(
+        store,
+        service,
+        listOf(SessionDataCleaner { cleaned++ }),
+        crashReporter,
+        clock
+    )
 
     private fun httpError(code: Int) =
         HttpException(Response.error<Any>(code, "".toResponseBody("text/plain".toMediaType())))
@@ -154,6 +162,38 @@ class DefaultSessionManagerTest {
         assertNull(store.tokens)
         assertEquals(1, cleaned)
         assertEquals(listOf("refresh-1"), service.logoutCalls)
+    }
+
+    @Test
+    fun `logout finishes even when the caller is canceled halfway`() = runTest {
+        // A store that suspends while clearing: the cancel arrives exactly in the middle of the sign-out
+        val slowStore = object : TokenStore {
+            var cleared = false
+
+            override suspend fun read(): AuthTokens? = null
+
+            override suspend fun save(tokens: AuthTokens) = Unit
+
+            override suspend fun clear() {
+                yield()
+                cleared = true
+            }
+        }
+        val slowManager = DefaultSessionManager(
+            slowStore,
+            service,
+            listOf(SessionDataCleaner { cleaned++ }),
+            crashReporter,
+            clock
+        )
+
+        val job = launch(start = CoroutineStart.UNDISPATCHED) { slowManager.logout() }
+        job.cancel()
+        job.join()
+
+        assertTrue("the tokens must be gone", slowStore.cleared)
+        assertEquals("the cached data must be wiped", 1, cleaned)
+        assertEquals(SessionState.SignedOut, slowManager.state.value)
     }
 
     @Test
