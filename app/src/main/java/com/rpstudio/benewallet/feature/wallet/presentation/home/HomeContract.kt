@@ -16,7 +16,7 @@ internal data class HomeState(
 }
 
 internal sealed interface HomeIntent {
-    data object Refresh : HomeIntent
+    object Refresh : HomeIntent
 }
 
 internal sealed interface HomeEffect {

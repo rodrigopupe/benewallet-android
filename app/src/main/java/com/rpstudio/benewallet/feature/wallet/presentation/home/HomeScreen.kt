@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,7 +43,7 @@ import java.time.Instant
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-internal fun HomeRoute(viewModel: HomeViewModel = koinViewModel()) {
+internal fun HomeRoute(onOpenStatement: () -> Unit, viewModel: HomeViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -59,17 +60,25 @@ internal fun HomeRoute(viewModel: HomeViewModel = koinViewModel()) {
     HomeScreen(
         state = state,
         snackBarHostState = snackBarHostState,
-        onRefresh = { viewModel.onIntent(HomeIntent.Refresh) }
+        onRefresh = { viewModel.onIntent(HomeIntent.Refresh) },
+        onOpenStatement = onOpenStatement
     )
 }
 
 @Composable
-internal fun HomeScreen(state: HomeState, snackBarHostState: SnackbarHostState, onRefresh: () -> Unit) {
+internal fun HomeScreen(
+    state: HomeState,
+    snackBarHostState: SnackbarHostState,
+    onRefresh: () -> Unit,
+    onOpenStatement: () -> Unit
+) {
     Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }) { padding ->
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = onRefresh,
-            modifier = Modifier.padding(padding).fillMaxSize()
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -89,6 +98,14 @@ internal fun HomeScreen(state: HomeState, snackBarHostState: SnackbarHostState, 
                     item { TotalCard(state.total) }
                     items(state.balances, key = { it.benefit }) { BenefitCard(it) }
                     state.lastUpdatedAt?.let { item { UpdatedAtLabel(it) } }
+                    item {
+                        Button(
+                            onClick = onOpenStatement,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.home_see_statement))
+                        }
+                    }
                 }
             }
         }
@@ -123,7 +140,9 @@ private fun BenefitCard(item: BenefitBalance) {
     }
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = container)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -153,7 +172,12 @@ private fun UpdatedAtLabel(updatedAt: Instant) {
 
 @Composable
 private fun EmptyState(isLoading: Boolean) {
-    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
+        contentAlignment = Alignment.Center
+    ) {
         if (isLoading) {
             CircularProgressIndicator()
         } else {

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">BeneWallet</string>
 
+    <!-- HOME screen   -->
     <string name="home_title">Minha carteira</string>
     <string name="home_total_balance">Saldo total</string>
     <string name="home_updated_at">Atualizado %1$s</string>
@@ -10,5 +11,27 @@
     <string name="error_network">Sem conexão. Mostrando os dados salvos.</string>
     <string name="error_server">O servidor está indisponível. Tente novamente em instantes.</string>
     <string name="error_unexpected">Algo deu errado. Tente novamente.</string>
+
+    <!-- STATEMENT screen -->
+    <string name="home_see_statement">Ver extrato</string>
+    <string name="statement_title">Extrato</string>
+    <string name="statement_empty">Nenhuma transação encontrada para este filtro.</string>
+    <string name="statement_partial">Mostrando dados salvos de outro filtro. Conecte-se para atualizar.</string>
+    <string name="statement_load_more_retry">Tentar novamente</string>
+    <string name="filter_all_categories">Todas</string>
+    <string name="period_all">Tudo</string>
+    <string name="period_7_days">7 dias</string>
+    <string name="period_30_days">30 dias</string>
+    <string name="period_this_month">Este mês</string>
+    <string name="category_recharge">Recarga</string>
+    <string name="category_restaurant">Restaurante</string>
+    <string name="category_delivery">Delivery</string>
+    <string name="category_snacks">Lanchonete</string>
+    <string name="category_grocery">Mercado</string>
+    <string name="category_bakery">Padaria</string>
+    <string name="category_greengrocer">Hortifruti</string>
+    <string name="category_other">Outros</string>
+    <string name="benefit_meal_short">VR</string>
+    <string name="benefit_food_short">VA</string>
 
 </resources>
