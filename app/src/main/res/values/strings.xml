@@ -20,7 +20,19 @@
     <string name="home_logout_confirm">Sair</string>
     <string name="home_logout_cancel">Cancelar</string>
     <string name="home_total_balance">Saldo total</string>
-    <string name="home_updated_at">Atualizado %1$s</string>
+    <string name="home_updated_just_now">Atualizado agora</string>
+    <plurals name="home_updated_minutes">
+        <item quantity="one">Atualizado há %d minuto</item>
+        <item quantity="other">Atualizado há %d minutos</item>
+    </plurals>
+    <plurals name="home_updated_hours">
+        <item quantity="one">Atualizado há %d hora</item>
+        <item quantity="other">Atualizado há %d horas</item>
+    </plurals>
+    <plurals name="home_updated_days">
+        <item quantity="one">Atualizado há %d dia</item>
+        <item quantity="other">Atualizado há %d dias</item>
+    </plurals>
     <string name="home_empty">Sem dados por aqui ainda. Puxe para atualizar.</string>
     <string name="benefit_meal">Vale-Refeição</string>
     <string name="benefit_food">Vale-Alimentação</string>

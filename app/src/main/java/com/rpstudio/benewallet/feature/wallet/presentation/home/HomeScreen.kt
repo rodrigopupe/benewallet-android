@@ -1,6 +1,5 @@
 package com.rpstudio.benewallet.feature.wallet.presentation.home
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -190,13 +190,14 @@ private fun BenefitCard(item: BenefitBalance) {
 
 @Composable
 private fun UpdatedAtLabel(updatedAt: Instant) {
-    val relative = DateUtils.getRelativeTimeSpanString(
-        updatedAt.toEpochMilli(),
-        System.currentTimeMillis(),
-        DateUtils.MINUTE_IN_MILLIS
-    )
+    val text = when (val elapsed = relativeTime(updatedAt, Instant.now())) {
+        RelativeTime.JustNow -> stringResource(R.string.home_updated_just_now)
+        is RelativeTime.Minutes -> pluralStringResource(R.plurals.home_updated_minutes, elapsed.count, elapsed.count)
+        is RelativeTime.Hours -> pluralStringResource(R.plurals.home_updated_hours, elapsed.count, elapsed.count)
+        is RelativeTime.Days -> pluralStringResource(R.plurals.home_updated_days, elapsed.count, elapsed.count)
+    }
     Text(
-        text = stringResource(R.string.home_updated_at, relative.toString()),
+        text = text,
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -213,7 +214,10 @@ private fun EmptyState(isLoading: Boolean) {
         if (isLoading) {
             CircularProgressIndicator()
         } else {
-            Text(text = stringResource(R.string.home_empty), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = stringResource(R.string.home_empty),
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }
