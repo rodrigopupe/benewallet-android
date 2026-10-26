@@ -42,7 +42,7 @@ internal class DefaultSessionManager(
         LoginResult.Success
     } catch (e: CancellationException) {
         throw e
-    } catch (ioe: IOException) {
+    } catch (ignored: IOException) {
         LoginResult.NetworkError
     } catch (e: HttpException) {
         when (e.code()) {
@@ -92,7 +92,7 @@ internal class DefaultSessionManager(
         renewed.accessToken
     } catch (e: CancellationException) {
         throw e
-    } catch (ioe: IOException) {
+    } catch (ignored: IOException) {
         // Offline is not a reason to sign the user out
         null
     } catch (e: HttpException) {
@@ -126,7 +126,7 @@ internal class DefaultSessionManager(
             service.logout(RefreshRequestDto(refreshToken))
         } catch (e: CancellationException) {
             throw e
-        } catch (ioe: IOException) {
+        } catch (ignored: IOException) {
             crashReporter.log("Could not revoke the session on the server: offline")
         } catch (e: HttpException) {
             crashReporter.log("Server error ${e.code()} while revoking the session")

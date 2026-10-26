@@ -24,7 +24,7 @@ internal class DefaultFeatureFlagsRepository(
             store.replaceFlags(response.flags.associate { it.key to it.enabled })
         } catch (e: CancellationException) {
             throw e
-        } catch (ioe: IOException) {
+        } catch (ignored: IOException) {
             // Offline is expected: the cache (or the defaults) stays in place
         } catch (e: HttpException) {
             crashReporter.log("Server error ${e.code()} while refreshing feature flags")
