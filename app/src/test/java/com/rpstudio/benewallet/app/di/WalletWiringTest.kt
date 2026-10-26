@@ -1,5 +1,9 @@
 package com.rpstudio.benewallet.app.di
 
+import com.rpstudio.benewallet.core.auth.FakeTokenStore
+import com.rpstudio.benewallet.core.auth.SessionManager
+import com.rpstudio.benewallet.core.auth.TokenStore
+import com.rpstudio.benewallet.core.auth.authModule
 import com.rpstudio.benewallet.core.common.coreCommonModule
 import com.rpstudio.benewallet.core.crash.CrashReporter
 import com.rpstudio.benewallet.core.featureflags.FakeFeatureFlagStore
@@ -24,6 +28,7 @@ class WalletWiringTest {
         single<CrashReporter> { FakeCrashReporter() }
         single<WalletLocalDataSource> { FakeWalletLocalDataSource() }
         single<FeatureFlagStore> { FakeFeatureFlagStore() }
+        single<TokenStore> { FakeTokenStore() }
     }
 
     @Test
@@ -32,12 +37,17 @@ class WalletWiringTest {
             modules(
                 coreCommonModule,
                 networkModule("http://localhost:8080/", isDebug = false),
+                authModule(isDebug = false),
                 featureFlagsModule,
                 walletModule,
                 androidFreeOverrides
             )
         }.koin
 
+        assertNotNull(
+            "SessionManager must resolve (service on the plain client, store fake, cleaners)",
+            koin.get<SessionManager>()
+        )
         assertNotNull(
             "FeatureFlagsRepository must resolve (service, store fake, qualifier)",
             koin.get<FeatureFlagsRepository>()

@@ -6,6 +6,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -18,34 +19,45 @@ val networkJson = Json {
     coerceInputValues = true
 }
 
+object NetworkNames {
+    /** The client and Retrofit that never carry a token. Only the sign-in, renew and sign-out calls use them. */
+    const val PLAIN = "plain"
+}
+
 /** Retrofit requires the base URL to end with "/" */
 internal fun String.withTrailingSlash(): String = if (endsWith("/")) this else "$this/"
+
+fun baseClientBuilder(): OkHttpClient.Builder = OkHttpClient.Builder()
+    .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+    .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+    .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+
+/** Debug builds only. The Authorization header is never printed. */
+fun OkHttpClient.Builder.withLogging(isDebug: Boolean, level: HttpLoggingInterceptor.Level): OkHttpClient.Builder =
+    apply {
+        if (isDebug) {
+            addInterceptor(
+                HttpLoggingInterceptor().apply {
+                    this.level = level
+                    // Avoid sensitive headers for being recorded into the device's system logs
+                    redactHeader("Authorization")
+                }
+            )
+        }
+    }
 
 fun networkModule(baseUrl: String, isDebug: Boolean): Module = module {
     single { networkJson }
 
-    single<OkHttpClient> {
-        val builder = OkHttpClient.Builder()
-            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-
-        if (isDebug) {
-            val loggingInterceptor = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-                // Avoid sensitive headers for being recorded into the device's system logs
-                redactHeader("Authorization")
-            }
-            builder.addInterceptor(loggingInterceptor)
-        }
-
-        builder.build()
+    // Headers only: the sign-in body holds the password and the responses hold tokens, neither may reach Logcat
+    single<OkHttpClient>(named(NetworkNames.PLAIN)) {
+        baseClientBuilder().withLogging(isDebug, HttpLoggingInterceptor.Level.HEADERS).build()
     }
 
-    single<Retrofit> {
+    single<Retrofit>(named(NetworkNames.PLAIN)) {
         Retrofit.Builder()
             .baseUrl(baseUrl.trim().withTrailingSlash())
-            .client(get())
+            .client(get<OkHttpClient>(named(NetworkNames.PLAIN)))
             .addConverterFactory(get<Json>().asConverterFactory(JSON_MEDIA_TYPE.toMediaType()))
             .build()
     }

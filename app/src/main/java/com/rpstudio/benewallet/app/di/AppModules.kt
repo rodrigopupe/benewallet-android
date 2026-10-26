@@ -2,6 +2,7 @@ package com.rpstudio.benewallet.app.di
 
 import com.rpstudio.benewallet.BuildConfig
 import com.rpstudio.benewallet.core.analytics.analyticsModule
+import com.rpstudio.benewallet.core.auth.authModule
 import com.rpstudio.benewallet.core.common.coreCommonModule
 import com.rpstudio.benewallet.core.crash.crashModule
 import com.rpstudio.benewallet.core.featureflags.featureFlagsModule
@@ -13,6 +14,7 @@ val appModules = listOf(
     crashModule,
     analyticsModule,
     networkModule(BuildConfig.BFF_BASE_URL, BuildConfig.DEBUG),
+    authModule(BuildConfig.DEBUG),
     featureFlagsModule,
     walletModule
 )
