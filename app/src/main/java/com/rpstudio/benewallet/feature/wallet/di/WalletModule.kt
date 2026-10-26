@@ -9,10 +9,12 @@ import com.rpstudio.benewallet.feature.wallet.data.local.WalletLocalDataSource
 import com.rpstudio.benewallet.feature.wallet.data.remote.WalletService
 import com.rpstudio.benewallet.feature.wallet.data.repository.DefaultWalletRepository
 import com.rpstudio.benewallet.feature.wallet.domain.repository.WalletRepository
+import com.rpstudio.benewallet.feature.wallet.presentation.home.HomeViewModel
 import java.time.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -38,4 +40,6 @@ val walletModule: Module = module {
             clock = get<Clock>()
         )
     }
+
+    viewModelOf(::HomeViewModel)
 }

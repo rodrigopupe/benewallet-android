@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">BeneWallet</string>
+
+    <string name="home_title">Minha carteira</string>
+    <string name="home_total_balance">Saldo total</string>
+    <string name="home_updated_at">Atualizado %1$s</string>
+    <string name="home_empty">Sem dados por aqui ainda. Puxe para atualizar.</string>
+    <string name="benefit_meal">Vale-Refeição</string>
+    <string name="benefit_food">Vale-Alimentação</string>
+    <string name="error_network">Sem conexão. Mostrando os dados salvos.</string>
+    <string name="error_server">O servidor está indisponível. Tente novamente em instantes.</string>
+    <string name="error_unexpected">Algo deu errado. Tente novamente.</string>
+
 </resources>
