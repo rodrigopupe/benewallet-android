@@ -47,7 +47,7 @@ internal class FakeWalletService : WalletService {
         limit: Int?
     ): TransactionsResponseDto {
         val call = TransactionsCall(cursor, category, from, to, limit)
-        transactionCalls += call
+        transactionCalls.add(call)
         return transactionsResult(call)
     }
 
@@ -100,11 +100,11 @@ internal class FakeCrashReporter : CrashReporter {
     override fun initialize() = Unit
 
     override fun recordException(throwable: Throwable) {
-        recorded += throwable
+        recorded.add(throwable)
     }
 
     override fun log(message: String) {
-        logs += message
+        logs.add(message)
     }
 }
 

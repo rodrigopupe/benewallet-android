@@ -58,7 +58,9 @@ class WalletRoutesTest {
         do {
             val query = if (cursor == null) "?limit=15" else "?limit=15&cursor=$cursor"
             val page = fetchPage(query)
-            ids += page.items.map { it.id }
+            ids.addAll(
+                page.items.map { it.id }
+            )
             cursor = page.nextCursor
         } while (cursor != null)
 
