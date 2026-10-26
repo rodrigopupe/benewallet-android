@@ -1,11 +1,11 @@
 package com.rpstudio.benewallet.feature.wallet.data.local
 
 import androidx.room.withTransaction
-import com.rpstudio.benewallet.feature.wallet.data.bffZone
 import com.rpstudio.benewallet.feature.wallet.domain.model.BenefitBalance
 import com.rpstudio.benewallet.feature.wallet.domain.model.StatementFilter
 import com.rpstudio.benewallet.feature.wallet.domain.model.Transaction
 import com.rpstudio.benewallet.feature.wallet.domain.model.TransactionPage
+import com.rpstudio.benewallet.feature.wallet.domain.model.statementZone
 import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -23,9 +23,9 @@ internal class RoomWalletLocalDataSource(private val database: WalletDatabase) :
 
     override fun observeTransactions(filter: StatementFilter): Flow<List<Transaction>> = transactionDao.observe(
         category = filter.category?.name,
-        fromMillis = filter.from?.atStartOfDay(bffZone)?.toInstant()?.toEpochMilli(),
+        fromMillis = filter.from?.atStartOfDay(statementZone)?.toInstant()?.toEpochMilli(),
         // "to" is inclusive for the user, so the SQL upper bound is the start of the next day (exclusive)
-        toExclusiveMillis = filter.to?.plusDays(1)?.atStartOfDay(bffZone)?.toInstant()?.toEpochMilli()
+        toExclusiveMillis = filter.to?.plusDays(1)?.atStartOfDay(statementZone)?.toInstant()?.toEpochMilli()
     ).map { rows -> rows.mapNotNull { it.toDomainOrNull() } }
 
     override fun observeTransactionsSync(): Flow<TransactionsSync?> =

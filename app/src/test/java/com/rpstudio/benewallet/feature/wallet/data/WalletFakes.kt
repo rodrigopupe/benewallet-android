@@ -11,6 +11,7 @@ import com.rpstudio.benewallet.feature.wallet.domain.model.BenefitBalance
 import com.rpstudio.benewallet.feature.wallet.domain.model.StatementFilter
 import com.rpstudio.benewallet.feature.wallet.domain.model.Transaction
 import com.rpstudio.benewallet.feature.wallet.domain.model.TransactionPage
+import com.rpstudio.benewallet.feature.wallet.domain.model.statementZone
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -86,7 +87,7 @@ internal class FakeWalletLocalDataSource : WalletLocalDataSource {
     }
 
     private fun StatementFilter.matches(transaction: Transaction): Boolean {
-        val day = transaction.occurredAt.atZone(bffZone).toLocalDate()
+        val day = transaction.occurredAt.atZone(statementZone).toLocalDate()
         return (category == null || transaction.category == category) &&
             (from == null || !day.isBefore(from)) &&
             (to == null || !day.isAfter(to))
