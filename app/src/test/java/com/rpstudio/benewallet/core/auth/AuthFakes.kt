@@ -1,5 +1,8 @@
 package com.rpstudio.benewallet.core.auth
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
+
 /** Reversible and recognizable as "not plain text", without needing an Android Keystore. */
 internal class FakeTokenCipher : TokenCipher {
     var failToDecrypt = false
@@ -55,11 +58,23 @@ internal class FakeAuthService : AuthService {
 internal class FakeSessionManager(var token: String? = "token-1") : SessionManager {
     var refreshedTo: String? = "token-2"
     val rejected = mutableListOf<String>()
-    override val state = kotlinx.coroutines.flow.MutableStateFlow<SessionState>(SessionState.SignedIn)
+    var loginResult: LoginResult = LoginResult.Success
+    var restoreCalls = 0
 
-    override suspend fun restore() = Unit
+    /** When set, login waits for it, so a test can look at the screen while the request is in flight. */
+    var loginGate: CompletableDeferred<Unit>? = null
+    val loginCalls = mutableListOf<Pair<String, String>>()
+    override val state = MutableStateFlow<SessionState>(SessionState.SignedIn)
 
-    override suspend fun login(email: String, password: String) = LoginResult.Success
+    override suspend fun restore() {
+        restoreCalls++
+    }
+
+    override suspend fun login(email: String, password: String): LoginResult {
+        loginCalls.add(email to password)
+        loginGate?.await()
+        return loginResult
+    }
 
     override suspend fun logout() {
         state.value = SessionState.SignedOut

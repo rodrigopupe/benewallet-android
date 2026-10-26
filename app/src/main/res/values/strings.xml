@@ -1,6 +1,17 @@
 <resources>
     <string name="app_name">BeneWallet</string>
 
+    <!-- LOGIN screen -->
+    <string name="login_subtitle">Entre para ver seus benefícios</string>
+    <string name="login_email">E-mail</string>
+    <string name="login_password">Senha</string>
+    <string name="login_show_password">Mostrar</string>
+    <string name="login_hide_password">Ocultar</string>
+    <string name="login_submit">Entrar</string>
+    <string name="login_error_invalid_credentials">E-mail ou senha incorretos.</string>
+    <string name="login_error_too_many_attempts">Muitas tentativas. Aguarde um minuto e tente novamente.</string>
+    <string name="login_error_network">Sem conexão. Verifique sua internet e tente novamente.</string>
+
     <!-- HOME screen   -->
     <string name="home_title">Minha carteira</string>
     <string name="home_total_balance">Saldo total</string>

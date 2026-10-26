@@ -11,6 +11,8 @@ import com.rpstudio.benewallet.core.featureflags.FeatureFlagStore
 import com.rpstudio.benewallet.core.featureflags.FeatureFlagsRepository
 import com.rpstudio.benewallet.core.featureflags.featureFlagsModule
 import com.rpstudio.benewallet.core.network.networkModule
+import com.rpstudio.benewallet.feature.auth.di.loginModule
+import com.rpstudio.benewallet.feature.auth.presentation.login.LoginViewModel
 import com.rpstudio.benewallet.feature.wallet.data.FakeCrashReporter
 import com.rpstudio.benewallet.feature.wallet.data.FakeWalletLocalDataSource
 import com.rpstudio.benewallet.feature.wallet.data.local.WalletLocalDataSource
@@ -39,6 +41,7 @@ class WalletWiringTest {
                 networkModule("http://localhost:8080/", isDebug = false),
                 authModule(isDebug = false),
                 featureFlagsModule,
+                loginModule,
                 walletModule,
                 androidFreeOverrides
             )
@@ -47,6 +50,10 @@ class WalletWiringTest {
         assertNotNull(
             "SessionManager must resolve (service on the unauthenticated client, store fake, cleaners)",
             koin.get<SessionManager>()
+        )
+        assertNotNull(
+            "LoginViewModel must resolve (SessionManager from the real auth module)",
+            koin.get<LoginViewModel>()
         )
         assertNotNull(
             "FeatureFlagsRepository must resolve (service, store fake, qualifier)",
