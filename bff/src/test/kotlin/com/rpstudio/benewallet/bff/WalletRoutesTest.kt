@@ -19,7 +19,7 @@ private val CLOCK = Clock.fixed(Instant.parse("2026-10-24T15:00:00Z"), ZONE)
 private val JSON = Json { ignoreUnknownKeys = true }
 
 private suspend fun ApplicationTestBuilder.fetchPage(query: String = ""): TransactionsResponse {
-    val response = client.get("/transactions$query")
+    val response = authorizedClient().get("/transactions$query")
     val body = response.bodyAsText()
     assertEquals(HttpStatusCode.OK, response.status, "GET /transactions$query -> $body")
     return JSON.decodeFromString(body)
@@ -29,7 +29,7 @@ class WalletRoutesTest {
     fun `balance has one non-negative entry per benefit`() = testApplication {
         application { bffModule(CLOCK) }
 
-        val body = JSON.decodeFromString<BalanceResponse>(client.get("/balance").bodyAsText())
+        val body = JSON.decodeFromString<BalanceResponse>(authorizedClient().get("/balance").bodyAsText())
 
         assertEquals(Benefit.entries.toSet(), body.balances.map { it.benefit }.toSet())
         assertTrue(body.balances.all { it.balanceCents >= 0 })
@@ -108,7 +108,7 @@ class WalletRoutesTest {
     fun `invalid cursor returns 400`() = testApplication {
         application { bffModule(CLOCK) }
 
-        val response = client.get("/transactions?cursor=not-a-cursor")
+        val response = authorizedClient().get("/transactions?cursor=not-a-cursor")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("cursor"))
@@ -118,7 +118,7 @@ class WalletRoutesTest {
     fun `feature flags are resolved for the user`() = testApplication {
         application { bffModule(CLOCK) }
 
-        val response = client.get("/feature-flags") { header("X-User-Id", "user-1") }
+        val response = authorizedClient().get("/feature-flags")
         val body = JSON.decodeFromString<FeatureFlagsResponse>(response.bodyAsText())
 
         assertTrue(body.flags.first { it.key == "goals" }.enabled)
@@ -129,7 +129,7 @@ class WalletRoutesTest {
         application { bffModule(CLOCK) }
 
         for (param in listOf("category=xyz", "from=20-10-2026", "to=abc", "cursor=not-a-cursor")) {
-            val response = client.get("/transactions?$param")
+            val response = authorizedClient().get("/transactions?$param")
 
             assertEquals(HttpStatusCode.BadRequest, response.status, param)
             assertTrue(
