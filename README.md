@@ -6,13 +6,9 @@ Aplicativo Android nativo (Kotlin + Jetpack Compose) para acompanhar o saldo e o
 
 > Projeto desenvolvido como teste técnico para a vaga de Senior Android Software Engineer no iFood.
 
-<!--
-Capturas de tela: salve em docs/screenshots/ e descomente a tabela abaixo.
-
-| Home | Extrato | Extrato filtrado |
-|---|---|---|
-| <img src="docs/screenshots/home.png" width="240"> | <img src="docs/screenshots/statement.png" width="240"> | <img src="docs/screenshots/statement-filtered.png" width="240"> |
--->
+| Login | Home | Extrato | Extrato filtrado |
+|---|---|---|---|
+| <img src="docs/screenshots/login.png" width="200"> | <img src="docs/screenshots/home.png" width="200"> | <img src="docs/screenshots/statement.png" width="200"> | <img src="docs/screenshots/statement-filtered.png" width="200"> |
 
 ## Contexto do problema
 
@@ -165,7 +161,7 @@ Módulo `:bff` (Ktor + Netty), com dados mockados e determinísticos (seed fixa,
 **O que os testes cobrem:** mappers, repositório (TTL, cache, erros, cancelamento, cursor e filtro), repositório de flags (cache, padrão, falhas), sessão (login, renovação, reuso do token, logout, inclusive cancelado no meio), interceptor e `Authenticator`, armazenamento dos tokens e das flags num DataStore real em JVM, ViewModels (login, Home e Extrato, incluindo a flag ligada e desligada), resolução do grafo real do Koin e as rotas do BFF. Os testes do app usam fakes em JVM puro, sem Robolectric.
 
 **O que não cobrem:**
-- O SQL do Room não tem teste em runtime (só a validação em tempo de compilação do Room).
+- O SQL do Room não tem teste em runtime (só a validação em tempo de compilação do Room). Isso inclui a leitura transacional que une itens e marcador de sincronização do extrato: a consistência dela vem do Room, e os testes usam um fake que a imita.
 - A cifra do Keystore (`KeystoreTokenCipher`) só pode ser testada em aparelho e não tem teste; os testes usam um fake dela.
 - Os `Mutex` (carteira e sessão) não têm teste de concorrência de verdade, só sequencial.
 - Não há testes de UI (Compose).
