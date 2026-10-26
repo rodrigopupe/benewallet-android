@@ -10,6 +10,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -18,7 +19,7 @@ private const val JSON = "application/json"
 
 class FeatureFlagsServiceTest {
     @Test
-    fun `feature flags sends the user id header`() = runBlocking {
+    fun `feature flags are requested without any user header`() = runBlocking {
         var lastRequest: Request? = null
         val interceptor = Interceptor { chain ->
             lastRequest = chain.request()
@@ -36,10 +37,10 @@ class FeatureFlagsServiceTest {
             .addConverterFactory(networkJson.asConverterFactory(JSON.toMediaType()))
             .build().create(FeatureFlagsService::class.java)
 
-        service.getFeatureFlags("user-1")
+        service.getFeatureFlags()
 
         val request = checkNotNull(lastRequest)
         assertEquals("/feature-flags", request.url.encodedPath)
-        assertEquals("user-1", request.header("X-User-Id"))
+        assertNull("the BFF identifies the user by the token", request.header("X-User-Id"))
     }
 }

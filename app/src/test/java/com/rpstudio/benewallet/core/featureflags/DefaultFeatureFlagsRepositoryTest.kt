@@ -102,14 +102,4 @@ class DefaultFeatureFlagsRepositoryTest {
 
         assertTrue(repository.observeFlags().first().isEnabled(FeatureFlag.STATEMENT_FILTERS))
     }
-
-    @Test
-    fun `refresh identifies the user with the installation id from the store`() = runTest {
-        service.result = { response() }
-        val repository = repository()
-
-        repository.refresh()
-
-        assertEquals(listOf<String?>(store.installId()), service.userIds)
-    }
 }

@@ -20,7 +20,7 @@ internal class DefaultFeatureFlagsRepository(
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override suspend fun refresh(): Unit = withContext(ioDispatcher) {
         try {
-            val response = service.getFeatureFlags(store.installId())
+            val response = service.getFeatureFlags()
             store.replaceFlags(response.flags.associate { it.key to it.enabled })
         } catch (e: CancellationException) {
             throw e
