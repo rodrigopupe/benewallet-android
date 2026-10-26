@@ -19,3 +19,8 @@ Adotar **offline-first com Room**. A UI observa o banco via `Flow`; o repositór
 - (+) Uma única fonte de dados para a UI.
 - (−) Necessidade de definir invalidação de cache (começa com TTL simples).
 - (−) Mais código de mapeamento (DTO ↔ entidade ↔ domínio).
+
+## Atualização (2026-10-25): decisões de implementação
+- **Cache x paginação x filtros:** snapshot único, substituído por inteiro no refresh (evita buracos) e estendido por "carregar mais" com o cursor guardado em `transactions_sync`. Cache por filtro e `RemoteMediator` ficam como evolução.
+- **Invalidação:** TTL com *stale-while-revalidate* (saldo 2 min, extrato 5 min). Falha de rede preserva o cache.
+- **Migração:** `fallbackToDestructiveMigration`, pois o banco é apenas cache; schema exportado.

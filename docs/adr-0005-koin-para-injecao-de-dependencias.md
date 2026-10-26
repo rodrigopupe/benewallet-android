@@ -19,5 +19,5 @@ As dependências são expostas por **interfaces**; cada pacote `feature` declara
 - (+) Menos configuração e menos *boilerplate*; sem dependência de KSP para DI.
 - (+) Módulos por feature combinam com a estrutura de pacotes "module-like".
 - (+) Como o código depende de interfaces, a troca por outra solução de DI fica restrita aos módulos de injeção.
-- (−) Dependências ausentes só falham em tempo de execução. Mitigação: teste de verificação dos módulos com `koin-test` rodando no CI.
+- (−) Dependências ausentes só falham em tempo de execução. Mitigação: teste que sobe o Koin com as definições reais do módulo e resolve o repositório (`WalletWiringTest`), rodando no CI. O `verify()` do `koin-test` foi descartado porque analisa apenas construtores e as definições do projeto usam lambdas.
 - (−) Sem a validação em compilação do Hilt, exige disciplina ao registrar dependências.

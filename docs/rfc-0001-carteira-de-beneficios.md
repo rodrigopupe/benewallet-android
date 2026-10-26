@@ -103,7 +103,7 @@ Funcionalidades novas (ex.: metas) ficam atrás de *feature flag* com percentual
 | Complexidade do offline-first | Começar pelo extrato e manter a regra de sincronização simples |
 
 ## 7. Questões em aberto
-- Estratégia de invalidação do cache (TTL simples vs. sincronização incremental).
+- ~~Estratégia de invalidação do cache~~ Resolvida: TTL simples com *stale-while-revalidate*. Ver ADR-0002 (atualização de 2026-10-25).
 - Necessidade de GraphQL (opcional, só se sobrar tempo).
 
 ## 8. Plano resumido
