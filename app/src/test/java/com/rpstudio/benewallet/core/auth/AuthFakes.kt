@@ -60,6 +60,7 @@ internal class FakeSessionManager(var token: String? = "token-1") : SessionManag
     val rejected = mutableListOf<String>()
     var loginResult: LoginResult = LoginResult.Success
     var restoreCalls = 0
+    var logoutCalls = 0
 
     /** When set, login waits for it, so a test can look at the screen while the request is in flight. */
     var loginGate: CompletableDeferred<Unit>? = null
@@ -77,6 +78,7 @@ internal class FakeSessionManager(var token: String? = "token-1") : SessionManag
     }
 
     override suspend fun logout() {
+        logoutCalls++
         state.value = SessionState.SignedOut
     }
 

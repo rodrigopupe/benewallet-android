@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -20,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,7 +62,7 @@ internal fun HomeRoute(onOpenStatement: () -> Unit, viewModel: HomeViewModel = k
     HomeScreen(
         state = state,
         snackBarHostState = snackBarHostState,
-        onRefresh = { viewModel.onIntent(HomeIntent.Refresh) },
+        onIntent = viewModel::onIntent,
         onOpenStatement = onOpenStatement
     )
 }
@@ -69,13 +71,15 @@ internal fun HomeRoute(onOpenStatement: () -> Unit, viewModel: HomeViewModel = k
 internal fun HomeScreen(
     state: HomeState,
     snackBarHostState: SnackbarHostState,
-    onRefresh: () -> Unit,
+    onIntent: (HomeIntent) -> Unit,
     onOpenStatement: () -> Unit
 ) {
+    if (state.confirmingLogout) LogoutDialog(onIntent)
+
     Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }) { padding ->
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
-            onRefresh = onRefresh,
+            onRefresh = { onIntent(HomeIntent.Refresh) },
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
@@ -86,11 +90,20 @@ internal fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    Text(
-                        text = stringResource(R.string.home_title),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_title),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        TextButton(onClick = { onIntent(HomeIntent.RequestLogout) }) {
+                            Text(stringResource(R.string.home_logout))
+                        }
+                    }
                 }
                 if (state.balances.isEmpty()) {
                     item { EmptyState(isLoading = state.isRefreshing) }
@@ -110,6 +123,25 @@ internal fun HomeScreen(
             }
         }
     }
+}
+
+@Composable
+private fun LogoutDialog(onIntent: (HomeIntent) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onIntent(HomeIntent.CancelLogout) },
+        title = { Text(stringResource(R.string.home_logout_title)) },
+        text = { Text(stringResource(R.string.home_logout_message)) },
+        confirmButton = {
+            TextButton(onClick = { onIntent(HomeIntent.ConfirmLogout) }) {
+                Text(stringResource(R.string.home_logout_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onIntent(HomeIntent.CancelLogout) }) {
+                Text(stringResource(R.string.home_logout_cancel))
+            }
+        }
+    )
 }
 
 @Composable
