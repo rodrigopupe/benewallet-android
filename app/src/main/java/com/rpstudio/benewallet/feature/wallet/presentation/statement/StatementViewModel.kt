@@ -2,6 +2,8 @@ package com.rpstudio.benewallet.feature.wallet.presentation.statement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rpstudio.benewallet.core.analytics.Analytics
+import com.rpstudio.benewallet.core.analytics.AnalyticsEvent
 import com.rpstudio.benewallet.feature.wallet.domain.model.Category
 import com.rpstudio.benewallet.feature.wallet.domain.model.RefreshResult
 import com.rpstudio.benewallet.feature.wallet.domain.model.StatementFilter
@@ -28,7 +30,11 @@ private const val LAST_7_DAYS_OFFSET = 6L
 private const val LAST_30_DAYS_OFFSET = 29L
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class StatementViewModel(private val repository: WalletRepository, private val clock: Clock) : ViewModel() {
+internal class StatementViewModel(
+    private val repository: WalletRepository,
+    private val analytics: Analytics,
+    private val clock: Clock
+) : ViewModel() {
     private val selection = MutableStateFlow(Selection())
     private val progress = MutableStateFlow(Progress())
     private val effectChannel = Channel<StatementEffect>(Channel.BUFFERED)
@@ -78,6 +84,7 @@ internal class StatementViewModel(private val repository: WalletRepository, priv
                 )
             )
         }
+        trackFilterApplied()
         refresh(force = false)
     }
 
@@ -85,6 +92,7 @@ internal class StatementViewModel(private val repository: WalletRepository, priv
         val today = LocalDate.now(clock.withZone(statementZone))
         val (from, to) = period.range(today)
         selection.update { it.copy(period = period, filter = it.filter.copy(from = from, to = to)) }
+        trackFilterApplied()
         refresh(force = false)
     }
 
@@ -112,6 +120,16 @@ internal class StatementViewModel(private val repository: WalletRepository, priv
                 effectChannel.send(StatementEffect.ShowError(result.error))
             }
         }
+    }
+
+    private fun trackFilterApplied() {
+        val selected = selection.value
+        analytics.track(
+            AnalyticsEvent.StatementFilterApplied(
+                selected.filter.category?.name,
+                selected.period.name
+            )
+        )
     }
 }
 

@@ -1,5 +1,7 @@
 package com.rpstudio.benewallet.feature.wallet.presentation.statement
 
+import com.rpstudio.benewallet.core.analytics.AnalyticsEvent
+import com.rpstudio.benewallet.core.analytics.FakeAnalytics
 import com.rpstudio.benewallet.feature.wallet.FakeWalletRepository
 import com.rpstudio.benewallet.feature.wallet.domain.model.Category
 import com.rpstudio.benewallet.feature.wallet.domain.model.RefreshResult
@@ -26,9 +28,10 @@ import org.junit.Test
 class StatementViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeWalletRepository()
+    private val analytics = FakeAnalytics()
     private val clock = Clock.fixed(Instant.parse("2026-10-25T15:00:00Z"), ZoneOffset.UTC)
 
-    private fun createViewModel() = StatementViewModel(repository, clock)
+    private fun createViewModel() = StatementViewModel(repository, analytics, clock)
 
     @Before
     fun setUp() {
@@ -102,6 +105,27 @@ class StatementViewModelTest {
         assertEquals(
             listOf<StatementEffect>(StatementEffect.ShowError(WalletError.Network)),
             effects
+        )
+    }
+
+    @Test
+    fun `choosing filters tracks the event but opening the screen does not`() = runTest {
+        val viewModel = createViewModel()
+        assertEquals(
+            "opening the screen is not a filter",
+            emptyList<AnalyticsEvent>(),
+            analytics.events
+        )
+
+        viewModel.onIntent(StatementIntent.SelectCategory(Category.DELIVERY))
+        viewModel.onIntent(StatementIntent.SelectPeriod(PeriodFilter.LAST_7_DAYS))
+
+        assertEquals(
+            listOf(
+                AnalyticsEvent.StatementFilterApplied("DELIVERY", "ALL"),
+                AnalyticsEvent.StatementFilterApplied("DELIVERY", "LAST_7_DAYS")
+            ),
+            analytics.events
         )
     }
 }
