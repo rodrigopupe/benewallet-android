@@ -24,3 +24,6 @@ Adotar **offline-first com Room**. A UI observa o banco via `Flow`; o repositór
 - **Cache x paginação x filtros:** snapshot único, substituído por inteiro no refresh (evita buracos) e estendido por "carregar mais" com o cursor guardado em `transactions_sync`. Cache por filtro e `RemoteMediator` ficam como evolução.
 - **Invalidação:** TTL com *stale-while-revalidate* (saldo 2 min, extrato 5 min). Falha de rede preserva o cache.
 - **Migração:** `fallbackToDestructiveMigration`, pois o banco é apenas cache; schema exportado.
+
+## Atualização (2026-10-26): logout
+- O banco guarda dados de uma conta, então encerrar a sessão o **apaga por completo**, incluindo os marcadores de sincronização (um `fetchedAt` antigo faria a conta seguinte pular o primeiro refresh). Ver ADR-0006.

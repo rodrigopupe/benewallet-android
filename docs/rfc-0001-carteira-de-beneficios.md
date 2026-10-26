@@ -57,7 +57,7 @@ flowchart LR
 ### 4.2 App Android
 - **Apresentação:** Jetpack Compose + MVI (estado único, intents e effects). Ver ADR-0001.
 - **Dados:** repositório *offline-first*: o Room é a fonte da verdade da UI e a rede atualiza o cache. Ver ADR-0002.
-- **Preferências e metas:** DataStore.
+- **Preferências, sessão e flags:** DataStore (a sessão cifrada com o Android Keystore; ver ADR-0006).
 - **Estrutura:** módulo único `:app` organizado em pacotes "module-like" (`core`, `feature.auth`, `feature.wallet`), com dependências em um só sentido. Ver ADR-0004.
 - **Injeção de dependências:** Koin. Ver ADR-0005.
 - **Assíncrono:** Coroutines e Flow.
@@ -67,12 +67,13 @@ Camada fina que agrega e adapta os dados para o app.
 
 | Endpoint | Função |
 |---|---|
+| `POST /auth/login`, `/auth/refresh`, `/auth/logout` | Sessão: token de acesso curto + refresh rotativo. Ver ADR-0006 |
 | `GET /balance` | Saldo por benefício |
 | `GET /transactions?cursor=&category=&from=&to=` | Extrato paginado e filtrável |
 | `GET /feature-flags` | Flags com rollout percentual. Ver ADR-0003 |
 
 ### 4.4 Segurança e LGPD
-- Biometria para abrir o app; dados sensíveis protegidos com Android Keystore.
+- Biometria para abrir o app; dados sensíveis protegidos com Android Keystore. *Entregue: tokens no Keystore, sem biometria (ver ADR-0006 e o README).*
 - TLS com *certificate pinning*; sem dados sensíveis em logs.
 - Mascaramento de dados na UI e coleta mínima (apenas o necessário para a funcionalidade).
 - Checklist mapeado ao OWASP MASVS no README.

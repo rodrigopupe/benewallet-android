@@ -19,3 +19,7 @@ Servir as flags pelo endpoint `GET /feature-flags` do BFF, com cache local e val
 - (+) Demonstra a atuação no BFF sem dependência externa.
 - (−) Implementação própria é menos rica que uma solução dedicada.
 - (−) É preciso tratar flags desatualizadas no cliente (valor padrão e cache).
+
+## Atualização (2026-10-26): identificação pelo token
+- O BFF resolve as flags para o **usuário do token de acesso**; o header `X-User-Id` e o UUID de instalação do app deixaram de existir (ADR-0006). O rollout percentual passa a valer por conta.
+- No app, as flags ficam em cache no DataStore, com valores padrão por flag (`statement_filters` ligada, `goals` desligada), e o cache é apagado quando a sessão termina, para a conta seguinte não herdar os valores da anterior.

@@ -22,3 +22,7 @@ Adotar **pacotes "module-like"** em um único módulo `:app`:
 - (+) Migração futura para módulos Gradle quase mecânica, pois as fronteiras já existem.
 - (−) O compilador não impede violações de fronteira como um módulo Gradle faria. Mitigação: `internal` no Kotlin e uma verificação simples no CI (ex.: regras de arquitetura com Konsist).
 - (−) Sem ganho de build incremental por módulo.
+
+## Atualização (2026-10-26): o que existe hoje
+- `core.auth` guarda a sessão (contratos `SessionManager` e `SessionDataCleaner`); `feature.auth` tem a tela de login. A carteira usa a sessão só pelo contrato de `core`, sem depender de `feature.auth`.
+- As features registram o que precisa ser apagado no logout (`SessionDataCleaner`) sem que o `core` conheça Room nem flags.
