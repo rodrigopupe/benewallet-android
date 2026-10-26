@@ -18,7 +18,7 @@ import retrofit2.Retrofit
 private const val SESSION_FILE_NAME = "session"
 
 fun authModule(isDebug: Boolean): Module = module {
-    single<AuthService> { get<Retrofit>(named(NetworkNames.PLAIN)).create(AuthService::class.java) }
+    single<AuthService> { get<Retrofit>(named(NetworkNames.UNAUTHENTICATED)).create(AuthService::class.java) }
 
     single<DataStore<Preferences>>(named(SESSION_FILE_NAME)) {
         PreferenceDataStoreFactory.create { androidContext().preferencesDataStoreFile(SESSION_FILE_NAME) }
@@ -44,10 +44,12 @@ fun authModule(isDebug: Boolean): Module = module {
         baseClientBuilder()
             .addInterceptor(AuthInterceptor(sessionManager))
             .authenticator(TokenAuthenticator(sessionManager))
-            // Bodies are the wallet data; the Authorization header is redacted by withLogging
+            // The Authorization header is redacted by withLogging
             .withLogging(isDebug, HttpLoggingInterceptor.Level.BODY)
             .build()
     }
 
-    single<Retrofit> { get<Retrofit>(named(NetworkNames.PLAIN)).newBuilder().client(get<OkHttpClient>()).build() }
+    single<Retrofit> {
+        get<Retrofit>(named(NetworkNames.UNAUTHENTICATED)).newBuilder().client(get<OkHttpClient>()).build()
+    }
 }

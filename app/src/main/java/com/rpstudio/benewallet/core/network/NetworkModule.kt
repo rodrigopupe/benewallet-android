@@ -21,7 +21,7 @@ val networkJson = Json {
 
 object NetworkNames {
     /** The client and Retrofit that never carry a token. Only the sign-in, renew and sign-out calls use them. */
-    const val PLAIN = "plain"
+    const val UNAUTHENTICATED = "unauthenticated"
 }
 
 /** Retrofit requires the base URL to end with "/" */
@@ -49,15 +49,17 @@ fun OkHttpClient.Builder.withLogging(isDebug: Boolean, level: HttpLoggingInterce
 fun networkModule(baseUrl: String, isDebug: Boolean): Module = module {
     single { networkJson }
 
-    // Headers only: the sign-in body holds the password and the responses hold tokens, neither may reach Logcat
-    single<OkHttpClient>(named(NetworkNames.PLAIN)) {
+    // This is the client of the sign-in, renew and sign-out calls, so its logs stay at HEADERS on purpose: the sign-in
+    // body holds the password and the responses hold the tokens, and none of that may reach Logcat.
+    // The client that carries the token (and logs BODY) is defined in authModule.
+    single<OkHttpClient>(named(NetworkNames.UNAUTHENTICATED)) {
         baseClientBuilder().withLogging(isDebug, HttpLoggingInterceptor.Level.HEADERS).build()
     }
 
-    single<Retrofit>(named(NetworkNames.PLAIN)) {
+    single<Retrofit>(named(NetworkNames.UNAUTHENTICATED)) {
         Retrofit.Builder()
             .baseUrl(baseUrl.trim().withTrailingSlash())
-            .client(get<OkHttpClient>(named(NetworkNames.PLAIN)))
+            .client(get<OkHttpClient>(named(NetworkNames.UNAUTHENTICATED)))
             .addConverterFactory(get<Json>().asConverterFactory(JSON_MEDIA_TYPE.toMediaType()))
             .build()
     }

@@ -45,7 +45,7 @@ class WalletWiringTest {
         }.koin
 
         assertNotNull(
-            "SessionManager must resolve (service on the plain client, store fake, cleaners)",
+            "SessionManager must resolve (service on the unauthenticated client, store fake, cleaners)",
             koin.get<SessionManager>()
         )
         assertNotNull(
