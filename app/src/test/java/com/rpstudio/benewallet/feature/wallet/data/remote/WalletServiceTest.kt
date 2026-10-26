@@ -70,15 +70,4 @@ class WalletServiceTest {
 
         assertNull(checkNotNull(recorder.lastRequest).url.query)
     }
-
-    @Test
-    fun `feature flags sends the user id header`() = runBlocking {
-        val recorder = RecordingInterceptor("""{"flags":[]}""")
-
-        buildApi(recorder).getFeatureFlags("user-1")
-
-        val request = checkNotNull(recorder.lastRequest)
-        assertEquals("/feature-flags", request.url.encodedPath)
-        assertEquals("user-1", request.header("X-User-Id"))
-    }
 }

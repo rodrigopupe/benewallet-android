@@ -33,9 +33,3 @@ internal data class TransactionDto(
 
 @Serializable
 internal data class TransactionsResponseDto(val items: List<TransactionDto>, val nextCursor: String? = null)
-
-@Serializable
-internal data class FeatureFlagDto(val key: String, val enabled: Boolean, val rolloutPercent: Int = 0)
-
-@Serializable
-internal data class FeatureFlagsResponseDto(val flags: List<FeatureFlagDto>)

@@ -5,7 +5,6 @@ import com.rpstudio.benewallet.feature.wallet.data.local.TransactionsSync
 import com.rpstudio.benewallet.feature.wallet.data.local.WalletLocalDataSource
 import com.rpstudio.benewallet.feature.wallet.data.remote.WalletService
 import com.rpstudio.benewallet.feature.wallet.data.remote.dto.BalanceResponseDto
-import com.rpstudio.benewallet.feature.wallet.data.remote.dto.FeatureFlagsResponseDto
 import com.rpstudio.benewallet.feature.wallet.data.remote.dto.TransactionsResponseDto
 import com.rpstudio.benewallet.feature.wallet.domain.model.BenefitBalance
 import com.rpstudio.benewallet.feature.wallet.domain.model.StatementFilter
@@ -51,8 +50,6 @@ internal class FakeWalletService : WalletService {
         transactionCalls.add(call)
         return transactionsResult(call)
     }
-
-    override suspend fun getFeatureFlags(userId: String?) = FeatureFlagsResponseDto(emptyList())
 }
 
 internal class FakeWalletLocalDataSource : WalletLocalDataSource {
