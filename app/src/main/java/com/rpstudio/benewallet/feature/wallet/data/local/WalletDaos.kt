@@ -14,7 +14,7 @@ private const val OBSERVE_TRANSACTIONS_QUERY = "SELECT * FROM transactions " +
 @Dao
 internal interface TransactionDao {
     @Query(OBSERVE_TRANSACTIONS_QUERY)
-    fun observe(category: String?, fromMillis: Long?, toExclusiveMillis: Long?): Flow<List<TransactionEntity>>
+    suspend fun query(category: String?, fromMillis: Long?, toExclusiveMillis: Long?): List<TransactionEntity>
 
     @Upsert
     suspend fun upsert(items: List<TransactionEntity>)
@@ -45,6 +45,9 @@ internal interface SyncDao {
 
     @Query("SELECT * FROM transactions_sync WHERE id = $SYNC_SINGLETON_ID")
     fun observeTransactionsSync(): Flow<TransactionsSyncEntity?>
+
+    @Query("SELECT * FROM transactions_sync WHERE id = $SYNC_SINGLETON_ID")
+    suspend fun getTransactionsSync(): TransactionsSyncEntity?
 
     @Upsert
     suspend fun upsertTransactionsSync(entity: TransactionsSyncEntity)

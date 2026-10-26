@@ -1,6 +1,7 @@
 package com.rpstudio.benewallet.feature.wallet.data
 
 import com.rpstudio.benewallet.core.crash.CrashReporter
+import com.rpstudio.benewallet.feature.wallet.data.local.LocalStatement
 import com.rpstudio.benewallet.feature.wallet.data.local.TransactionsSync
 import com.rpstudio.benewallet.feature.wallet.data.local.WalletLocalDataSource
 import com.rpstudio.benewallet.feature.wallet.data.remote.WalletService
@@ -19,6 +20,7 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 
 internal data class TransactionsCall(
     val cursor: String?,
@@ -30,7 +32,11 @@ internal data class TransactionsCall(
 
 internal class FakeWalletService : WalletService {
     var balanceResult: () -> BalanceResponseDto = { error("balance not stubbed") }
-    var transactionsResult: (TransactionsCall) -> TransactionsResponseDto = { error("transactions not stubbed") }
+
+    // suspend, so a test can hold the "network" open while it looks at what the screen would show
+    var transactionsResult: suspend (
+        TransactionsCall
+    ) -> TransactionsResponseDto = { error("transactions not stubbed") }
     var balanceCalls = 0
     val transactionCalls = mutableListOf<TransactionsCall>()
 
@@ -55,18 +61,34 @@ internal class FakeWalletService : WalletService {
 internal class FakeWalletLocalDataSource : WalletLocalDataSource {
     private val balances = MutableStateFlow<List<BenefitBalance>>(emptyList())
     private val balancesFetchedAt = MutableStateFlow<Instant?>(null)
-    private val transactions = MutableStateFlow<List<Transaction>>(emptyList())
-    private val sync = MutableStateFlow<TransactionsSync?>(null)
+    private val statement = MutableStateFlow(LocalStatement(emptyList(), null))
     private val newestFirst = compareByDescending<Transaction> { it.occurredAt }.thenByDescending { it.id }
+
+    /**
+     * Room commits a transaction first and tells the observers afterwards, a little later. With this on, a replace is
+     * only seen by the flows after [flushNotifications], which is how a test can look at that gap.
+     */
+    var holdNotifications = false
+    private var pendingNotification: (() -> Unit)? = null
+
+    private fun publish(change: () -> Unit) {
+        if (holdNotifications) pendingNotification = change else change()
+    }
+
+    fun flushNotifications() {
+        pendingNotification?.invoke()
+        pendingNotification = null
+    }
 
     override fun observeBalances(): Flow<List<BenefitBalance>> = balances
 
     override fun observeBalancesFetchedAt(): Flow<Instant?> = balancesFetchedAt
 
-    override fun observeTransactions(filter: StatementFilter): Flow<List<Transaction>> =
-        transactions.map { all -> all.filter { filter.matches(it) }.sortedWith(newestFirst) }
+    override fun observeStatement(filter: StatementFilter): Flow<LocalStatement> = statement.map {
+        it.copy(items = it.items.filter { transaction -> filter.matches(transaction) }.sortedWith(newestFirst))
+    }
 
-    override fun observeTransactionsSync(): Flow<TransactionsSync?> = sync
+    override fun observeTransactionsSync(): Flow<TransactionsSync?> = statement.map { it.sync }
 
     override suspend fun replaceBalances(balances: List<BenefitBalance>, fetchedAt: Instant) {
         this.balances.value = balances
@@ -74,20 +96,22 @@ internal class FakeWalletLocalDataSource : WalletLocalDataSource {
     }
 
     override suspend fun replaceTransactions(page: TransactionPage, filter: StatementFilter, fetchedAt: Instant) {
-        transactions.value = page.items
-        sync.value = TransactionsSync(fetchedAt, page.nextCursor, filter)
+        publish { statement.value = LocalStatement(page.items, TransactionsSync(fetchedAt, page.nextCursor, filter)) }
     }
 
     override suspend fun appendTransactions(page: TransactionPage) {
-        transactions.value = (transactions.value + page.items).associateBy { it.id }.values.toList()
-        sync.value = sync.value?.copy(nextCursor = page.nextCursor)
+        statement.update { current ->
+            LocalStatement(
+                items = (current.items + page.items).associateBy { it.id }.values.toList(),
+                sync = current.sync?.copy(nextCursor = page.nextCursor)
+            )
+        }
     }
 
     override suspend fun clearAll() {
         balances.value = emptyList()
         balancesFetchedAt.value = null
-        transactions.value = emptyList()
-        sync.value = null
+        statement.value = LocalStatement(emptyList(), null)
     }
 
     private fun StatementFilter.matches(transaction: Transaction): Boolean {

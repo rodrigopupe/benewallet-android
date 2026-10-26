@@ -8,6 +8,7 @@ import com.rpstudio.benewallet.feature.wallet.domain.model.TransactionPage
 import com.rpstudio.benewallet.feature.wallet.domain.model.statementZone
 import java.time.Instant
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 internal class RoomWalletLocalDataSource(private val database: WalletDatabase) : WalletLocalDataSource {
@@ -21,12 +22,24 @@ internal class RoomWalletLocalDataSource(private val database: WalletDatabase) :
     override fun observeBalancesFetchedAt(): Flow<Instant?> =
         syncDao.observeBalanceSync().map { row -> row?.let { Instant.ofEpochMilli(it.fetchedAtMillis) } }
 
-    override fun observeTransactions(filter: StatementFilter): Flow<List<Transaction>> = transactionDao.observe(
-        category = filter.category?.name,
-        fromMillis = filter.from?.atStartOfDay(statementZone)?.toInstant()?.toEpochMilli(),
-        // "to" is inclusive for the user, so the SQL upper bound is the start of the next day (exclusive)
-        toExclusiveMillis = filter.to?.plusDays(1)?.atStartOfDay(statementZone)?.toInstant()?.toEpochMilli()
-    ).map { rows -> rows.mapNotNull { it.toDomainOrNull() } }
+    override fun observeStatement(filter: StatementFilter): Flow<LocalStatement> = database.invalidationTracker
+        .createFlow("transactions", "transactions_sync")
+        .map {
+            // One read transaction: items and marker come from the same state of the database
+            database.withTransaction {
+                LocalStatement(
+                    items = transactionDao.query(
+                        category = filter.category?.name,
+                        fromMillis = filter.from?.atStartOfDay(statementZone)?.toInstant()?.toEpochMilli(),
+                        // "to" is inclusive for the user, so the SQL upper bound is the start of the next day
+                        toExclusiveMillis = filter.to?.plusDays(1)?.atStartOfDay(statementZone)?.toInstant()
+                            ?.toEpochMilli()
+                    ).mapNotNull { it.toDomainOrNull() },
+                    sync = syncDao.getTransactionsSync()?.toDomain()
+                )
+            }
+        }
+        .distinctUntilChanged()
 
     override fun observeTransactionsSync(): Flow<TransactionsSync?> =
         syncDao.observeTransactionsSync().map { row -> row?.toDomain() }

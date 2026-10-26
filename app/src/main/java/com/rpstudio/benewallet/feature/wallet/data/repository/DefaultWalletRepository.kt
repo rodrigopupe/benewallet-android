@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -46,7 +47,7 @@ internal class DefaultWalletRepository(
         }
 
     override fun observeStatement(filter: StatementFilter): Flow<Statement> =
-        combine(local.observeTransactions(filter), local.observeTransactionsSync()) { items, sync ->
+        local.observeStatement(filter).map { (items, sync) ->
             val sameFilter = sync?.filter == filter
             Statement(
                 items = items,

@@ -28,7 +28,7 @@ class WalletSessionCleanerTest {
             "a stale fetch time would make the next account skip its first refresh",
             local.observeBalancesFetchedAt().first()
         )
-        assertEquals(emptyList<Any>(), local.observeTransactions(StatementFilter()).first())
+        assertEquals(emptyList<Any>(), local.observeStatement(StatementFilter()).first().items)
         assertNull(local.observeTransactionsSync().first())
     }
 }

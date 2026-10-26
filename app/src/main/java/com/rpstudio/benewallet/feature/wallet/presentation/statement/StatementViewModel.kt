@@ -63,8 +63,8 @@ internal class StatementViewModel(
             category = selected.filter.category,
             period = selected.period,
             hasMore = statement.hasMore,
-            isPartial = statement.isPartial,
-            isRefreshing = inProgress.isRefreshing,
+            isPartial = statement.isPartial && inProgress.refreshFailed,
+            isRefreshing = inProgress.isRefreshing || (statement.isPartial && !inProgress.refreshFailed),
             isLoadingMore = inProgress.isLoadingMore,
             loadMoreFailed = inProgress.loadMoreFailed
         )
@@ -122,10 +122,11 @@ internal class StatementViewModel(
     private fun refresh(force: Boolean) {
         // A newer filter makes the in-flight refresh obsolete, so it is canceled instead of ignored
         refreshJob?.cancel()
+        // Marked before launching, so no frame is drawn between the filter change and the start of the request
+        progress.update { it.copy(isRefreshing = true, loadMoreFailed = false, refreshFailed = false) }
         refreshJob = viewModelScope.launch {
-            progress.update { it.copy(isRefreshing = true, loadMoreFailed = false) }
             val result = walletRepository.refreshStatement(selection.value.filter, force)
-            progress.update { it.copy(isRefreshing = false) }
+            progress.update { it.copy(isRefreshing = false, refreshFailed = result is RefreshResult.Failure) }
             if (result is RefreshResult.Failure) {
                 effectChannel.send(StatementEffect.ShowError(result.error))
             }
@@ -163,6 +164,7 @@ private data class Selection(
 
 private data class Progress(
     val isRefreshing: Boolean = false,
+    val refreshFailed: Boolean = false,
     val isLoadingMore: Boolean = false,
     val loadMoreFailed: Boolean = false
 )

@@ -11,12 +11,19 @@ internal data class TransactionsSync(val fetchedAt: Instant, val nextCursor: Str
     val hasMore: Boolean get() = nextCursor != null
 }
 
+/** The cached statement and its sync marker, read together: they always describe the same state of the database. */
+internal data class LocalStatement(val items: List<Transaction>, val sync: TransactionsSync?)
+
 internal interface WalletLocalDataSource {
     fun observeBalances(): Flow<List<BenefitBalance>>
 
     fun observeBalancesFetchedAt(): Flow<Instant?>
 
-    fun observeTransactions(filter: StatementFilter): Flow<List<Transaction>>
+    /**
+     * Items (for [filter]) and sync marker in a single emission. Two separate flows would let a screen see the marker
+     * of a new snapshot with the items of the old one, or the other way around, for an instant after every refresh.
+     */
+    fun observeStatement(filter: StatementFilter): Flow<LocalStatement>
 
     fun observeTransactionsSync(): Flow<TransactionsSync?>
 
