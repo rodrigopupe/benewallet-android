@@ -4,8 +4,10 @@ import com.rpstudio.benewallet.feature.wallet.domain.model.Benefit
 import com.rpstudio.benewallet.feature.wallet.domain.model.BenefitBalance
 import com.rpstudio.benewallet.feature.wallet.domain.model.Category
 import com.rpstudio.benewallet.feature.wallet.domain.model.Money
+import com.rpstudio.benewallet.feature.wallet.domain.model.StatementFilter
 import com.rpstudio.benewallet.feature.wallet.domain.model.Transaction
 import java.time.Instant
+import java.time.LocalDate
 
 private fun String.toBenefitOrNull(): Benefit? = Benefit.entries.firstOrNull { it.name == this }
 
@@ -36,3 +38,13 @@ internal fun BenefitBalance.toEntity() = BalanceEntity(benefit = benefit.name, b
 
 internal fun BalanceEntity.toDomainOrNull(): BenefitBalance? =
     benefit.toBenefitOrNull()?.let { BenefitBalance(it, Money(balanceCents)) }
+
+internal fun TransactionsSyncEntity.toDomain() = TransactionsSync(
+    fetchedAt = Instant.ofEpochMilli(fetchedAtMillis),
+    nextCursor = nextCursor,
+    filter = StatementFilter(
+        category = category?.toCategory(),
+        from = fromDate?.let(LocalDate::parse),
+        to = toDate?.let(LocalDate::parse)
+    )
+)

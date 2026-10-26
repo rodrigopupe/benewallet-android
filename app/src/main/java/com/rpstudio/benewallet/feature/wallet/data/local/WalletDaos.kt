@@ -38,14 +38,17 @@ internal interface BalanceDao {
 @Dao
 internal interface SyncDao {
     @Query("SELECT * FROM balance_sync WHERE id = $SYNC_SINGLETON_ID")
-    suspend fun getBalanceSync(): BalanceSyncEntity?
+    fun observeBalanceSync(): Flow<BalanceSyncEntity?>
 
     @Upsert
     suspend fun upsertBalanceSync(entity: BalanceSyncEntity)
 
     @Query("SELECT * FROM transactions_sync WHERE id = $SYNC_SINGLETON_ID")
-    suspend fun getTransactionsSync(): TransactionsSyncEntity?
+    fun observeTransactionsSync(): Flow<TransactionsSyncEntity?>
 
     @Upsert
     suspend fun upsertTransactionsSync(entity: TransactionsSyncEntity)
+
+    @Query("UPDATE transactions_sync SET nextCursor = :cursor WHERE id = $SYNC_SINGLETON_ID")
+    suspend fun updateTransactionsCursor(cursor: String?)
 }
