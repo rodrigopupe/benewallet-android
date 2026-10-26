@@ -92,7 +92,9 @@ internal fun StatementScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            FilterChips(state, onIntent)
+            if (state.filtersAvailable) {
+                FilterChips(state, onIntent)
+            }
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = { onIntent(StatementIntent.Refresh) },

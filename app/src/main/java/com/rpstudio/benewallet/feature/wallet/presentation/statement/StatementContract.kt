@@ -7,6 +7,7 @@ import com.rpstudio.benewallet.feature.wallet.domain.model.WalletError
 internal enum class PeriodFilter { ALL, LAST_7_DAYS, LAST_30_DAYS, THIS_MONTH }
 
 internal data class StatementState(
+    val filtersAvailable: Boolean = true,
     val items: List<Transaction> = emptyList(),
     val category: Category? = null,
     val period: PeriodFilter = PeriodFilter.ALL,

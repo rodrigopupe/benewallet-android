@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rpstudio.benewallet.core.analytics.Analytics
 import com.rpstudio.benewallet.core.analytics.AnalyticsEvent
+import com.rpstudio.benewallet.core.featureflags.FeatureFlag
+import com.rpstudio.benewallet.core.featureflags.FeatureFlagsRepository
 import com.rpstudio.benewallet.feature.wallet.domain.model.Category
 import com.rpstudio.benewallet.feature.wallet.domain.model.RefreshResult
 import com.rpstudio.benewallet.feature.wallet.domain.model.StatementFilter
@@ -19,7 +21,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -31,7 +36,8 @@ private const val LAST_30_DAYS_OFFSET = 29L
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class StatementViewModel(
-    private val repository: WalletRepository,
+    private val walletRepository: WalletRepository,
+    private val featureFlagsRepository: FeatureFlagsRepository,
     private val analytics: Analytics,
     private val clock: Clock
 ) : ViewModel() {
@@ -39,15 +45,20 @@ internal class StatementViewModel(
     private val progress = MutableStateFlow(Progress())
     private val effectChannel = Channel<StatementEffect>(Channel.BUFFERED)
     private var refreshJob: Job? = null
+    private val filtersEnabled = featureFlagsRepository.observeFlags()
+        .map { it.isEnabled(FeatureFlag.STATEMENT_FILTERS) }
+        .distinctUntilChanged()
 
     val effects: Flow<StatementEffect> = effectChannel.receiveAsFlow()
 
     val state: StateFlow<StatementState> = combine(
-        selection.flatMapLatest { repository.observeStatement(it.filter) },
+        selection.flatMapLatest { walletRepository.observeStatement(it.filter) },
         selection,
-        progress
-    ) { statement, selected, inProgress ->
+        progress,
+        filtersEnabled
+    ) { statement, selected, inProgress, filtersAvailable ->
         StatementState(
+            filtersAvailable = filtersAvailable,
             items = statement.items,
             category = selected.filter.category,
             period = selected.period,
@@ -65,6 +76,11 @@ internal class StatementViewModel(
 
     init {
         refresh(force = false)
+        // Flags never block the screen: the cached value (or the default) is used until the request answers
+        viewModelScope.launch { featureFlagsRepository.refresh() }
+        viewModelScope.launch {
+            filtersEnabled.filter { !it }.collect { resetFilters() }
+        }
     }
 
     fun onIntent(intent: StatementIntent) {
@@ -96,12 +112,19 @@ internal class StatementViewModel(
         refresh(force = false)
     }
 
+    /** Without the chips, a filter left over from before the flag was turned off could not be undone by the user. */
+    private fun resetFilters() {
+        if (selection.value == Selection()) return
+        selection.value = Selection()
+        refresh(force = false)
+    }
+
     private fun refresh(force: Boolean) {
         // A newer filter makes the in-flight refresh obsolete, so it is canceled instead of ignored
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             progress.update { it.copy(isRefreshing = true, loadMoreFailed = false) }
-            val result = repository.refreshStatement(selection.value.filter, force)
+            val result = walletRepository.refreshStatement(selection.value.filter, force)
             progress.update { it.copy(isRefreshing = false) }
             if (result is RefreshResult.Failure) {
                 effectChannel.send(StatementEffect.ShowError(result.error))
@@ -114,7 +137,7 @@ internal class StatementViewModel(
         if (current.isLoadingMore || current.isRefreshing) return
         viewModelScope.launch {
             progress.update { it.copy(isLoadingMore = true, loadMoreFailed = false) }
-            val result = repository.loadMoreStatement()
+            val result = walletRepository.loadMoreStatement()
             progress.update { it.copy(isLoadingMore = false, loadMoreFailed = result is RefreshResult.Failure) }
             if (result is RefreshResult.Failure) {
                 effectChannel.send(StatementEffect.ShowError(result.error))

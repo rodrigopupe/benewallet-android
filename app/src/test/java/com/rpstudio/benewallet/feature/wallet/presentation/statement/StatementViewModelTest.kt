@@ -2,6 +2,8 @@ package com.rpstudio.benewallet.feature.wallet.presentation.statement
 
 import com.rpstudio.benewallet.core.analytics.AnalyticsEvent
 import com.rpstudio.benewallet.core.analytics.FakeAnalytics
+import com.rpstudio.benewallet.core.featureflags.FakeFeatureFlagsRepository
+import com.rpstudio.benewallet.core.featureflags.FeatureFlags
 import com.rpstudio.benewallet.feature.wallet.FakeWalletRepository
 import com.rpstudio.benewallet.feature.wallet.domain.model.Category
 import com.rpstudio.benewallet.feature.wallet.domain.model.RefreshResult
@@ -28,10 +30,11 @@ import org.junit.Test
 class StatementViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = FakeWalletRepository()
+    private val featureFlags = FakeFeatureFlagsRepository()
     private val analytics = FakeAnalytics()
     private val clock = Clock.fixed(Instant.parse("2026-10-25T15:00:00Z"), ZoneOffset.UTC)
 
-    private fun createViewModel() = StatementViewModel(repository, analytics, clock)
+    private fun createViewModel() = StatementViewModel(repository, featureFlags, analytics, clock)
 
     @Before
     fun setUp() {
@@ -106,6 +109,50 @@ class StatementViewModelTest {
             listOf<StatementEffect>(StatementEffect.ShowError(WalletError.Network)),
             effects
         )
+    }
+
+    @Test
+    fun `opening the screen refreshes the feature flags`() = runTest {
+        createViewModel()
+
+        assertEquals(1, featureFlags.refreshCalls)
+    }
+
+    @Test
+    fun `filters are available by default and follow the flag`() = runTest {
+        val viewModel = createViewModel()
+        backgroundScope.launch(dispatcher) { viewModel.state.collect() }
+        assertEquals("on by default", true, viewModel.state.value.filtersAvailable)
+
+        featureFlags.flags.value = FeatureFlags(mapOf("statement_filters" to false))
+        assertEquals(false, viewModel.state.value.filtersAvailable)
+
+        featureFlags.flags.value = FeatureFlags(mapOf("statement_filters" to true))
+        assertEquals(true, viewModel.state.value.filtersAvailable)
+    }
+
+    @Test
+    fun `turning the flag off clears the filters that were applied`() = runTest {
+        val viewModel = createViewModel()
+        backgroundScope.launch(dispatcher) { viewModel.state.collect() }
+        viewModel.onIntent(StatementIntent.SelectCategory(Category.DELIVERY))
+        viewModel.onIntent(StatementIntent.SelectPeriod(PeriodFilter.LAST_7_DAYS))
+
+        featureFlags.flags.value = FeatureFlags(mapOf("statement_filters" to false))
+
+        assertEquals(StatementFilter(), repository.statementRefreshCalls.last().first)
+        assertEquals(null, viewModel.state.value.category)
+        assertEquals(PeriodFilter.ALL, viewModel.state.value.period)
+    }
+
+    @Test
+    fun `flag off without applied filters does not refresh again`() = runTest {
+        createViewModel()
+        val callsBefore = repository.statementRefreshCalls.size
+
+        featureFlags.flags.value = FeatureFlags(mapOf("statement_filters" to false))
+
+        assertEquals(callsBefore, repository.statementRefreshCalls.size)
     }
 
     @Test
